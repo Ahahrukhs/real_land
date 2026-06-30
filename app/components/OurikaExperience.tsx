@@ -22,7 +22,7 @@ import {
   Search,
   Shield
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -126,17 +126,32 @@ const routeLine = zones.map((zone) => [zone.lat, zone.lng] as [number, number]);
 
 const center: [number, number] = [28.05, 80.05];
 
+type SkyStyle = CSSProperties & Record<`--${string}`, string | number>;
+
+function randomBetween(min: number, max: number) {
+  return min + Math.random() * (max - min);
+}
+
+const cloudLayout = [
+  { top: -10, left: -20, width: 620 },
+  { top: 5, left: 52, width: 560 },
+  { top: 22, left: -16, width: 430 },
+  { top: 30, left: 58, width: 680 },
+  { top: 60, left: 10, width: 520 }
+];
+
 function iconFor(zone: Zone) {
   return L.divIcon({
     className: "estate-pin-wrapper",
     html: `
-      <button class="estate-pin estate-pin-${zone.type}" style="--pin-color: ${zone.hue}" aria-label="${zone.name}">
+      <span class="estate-pin estate-pin-${zone.type}" style="--pin-color: ${zone.hue}" role="img" aria-label="${zone.name}">
+        <span class="pin-label">${zone.name}</span>
         <span class="pin-pulse"></span>
-        <span class="pin-core"><span>UP</span></span>
-      </button>
+        <span class="pin-core"></span>
+      </span>
     `,
-    iconSize: [48, 58],
-    iconAnchor: [24, 54]
+    iconSize: [118, 76],
+    iconAnchor: [59, 72]
   });
 }
 
@@ -262,6 +277,52 @@ export default function OurikaExperience() {
     () => (activeType === "all" ? zones : zones.filter((zone) => zone.type === activeType)),
     [activeType]
   );
+  const cloudBanks = useMemo(
+    () =>
+      cloudLayout.map((cloud, index) => ({
+        id: `cloud-${index}`,
+        top: cloud.top + randomBetween(-6, 6),
+        left: cloud.left + randomBetween(-8, 8),
+        width: cloud.width + randomBetween(-90, 80),
+        duration: randomBetween(64, 124),
+        delay: randomBetween(-80, 0),
+        opacity: randomBetween(0.24, 0.58),
+        blur: randomBetween(0, 0.8),
+        scaleX: Math.random() > 0.48 ? 1 : -1,
+        scaleY: randomBetween(0.9, 1.08),
+        midX: randomBetween(-10, 18),
+        midY: randomBetween(-18, 16),
+        driftX: randomBetween(10, 34),
+        driftY: randomBetween(-20, 24)
+      })),
+    []
+  );
+  const birdFlock = useMemo(
+    () =>
+      Array.from({ length: 20 }, (_, index) => {
+        const leftToRight = Math.random() > 0.36;
+        const startX = leftToRight ? randomBetween(-28, -8) : randomBetween(108, 128);
+        const endX = leftToRight ? randomBetween(108, 132) : randomBetween(-32, -10);
+
+        return {
+          id: `bird-${index}`,
+          top: randomBetween(7, 86),
+          startX,
+          midX: randomBetween(18, 82),
+          endX,
+          driftY: randomBetween(-92, 92),
+          duration: randomBetween(16, 46),
+          delay: randomBetween(-42, 0),
+          opacity: randomBetween(0.28, 0.78),
+          scale: randomBetween(0.48, 1.22),
+          tilt: randomBetween(-9, 9),
+          midTilt: randomBetween(-7, 7),
+          endY: randomBetween(-36, 36),
+          flap: randomBetween(0.8, 1.65)
+        };
+      }),
+    []
+  );
   const selected = zones.find((zone) => zone.id === selectedId) ?? zones[0];
 
   useEffect(() => {
@@ -385,12 +446,54 @@ export default function OurikaExperience() {
       </div>
 
       <div className="sky-layer" aria-hidden="true">
-        <span className="cloud cloud-a" />
-        <span className="cloud cloud-b" />
-        <span className="cloud cloud-c" />
-        <span className="bird bird-a" />
-        <span className="bird bird-b" />
-        <span className="bird bird-c" />
+        {cloudBanks.map((cloud) => (
+          <span
+            className="cloud"
+            key={cloud.id}
+            style={
+              {
+                "--top": `${cloud.top}%`,
+                "--left": `${cloud.left}%`,
+                "--cloud-width": `${cloud.width}px`,
+                "--duration": `${cloud.duration}s`,
+                "--delay": `${cloud.delay}s`,
+                "--opacity": cloud.opacity,
+                "--blur": `${cloud.blur}px`,
+                "--scale-x": cloud.scaleX,
+                "--scale-y": cloud.scaleY,
+                "--mid-x": `${cloud.midX}vw`,
+                "--mid-y": `${cloud.midY}px`,
+                "--drift-x": `${cloud.driftX}vw`,
+                "--drift-y": `${cloud.driftY}px`
+              } as SkyStyle
+            }
+          >
+            <img src="/realistic-clouds.png" alt="" />
+          </span>
+        ))}
+        {birdFlock.map((bird) => (
+          <span
+            className="bird"
+            key={bird.id}
+            style={
+              {
+                "--top": `${bird.top}%`,
+                "--start-x": `${bird.startX}vw`,
+                "--mid-x": `${bird.midX}vw`,
+                "--end-x": `${bird.endX}vw`,
+                "--drift-y": `${bird.driftY}px`,
+                "--duration": `${bird.duration}s`,
+                "--delay": `${bird.delay}s`,
+                "--opacity": bird.opacity,
+                "--scale": bird.scale,
+                "--tilt": `${bird.tilt}deg`,
+                "--mid-tilt": `${bird.midTilt}deg`,
+                "--end-y": `${bird.endY}px`,
+                "--flap-duration": `${bird.flap}s`
+              } as SkyStyle
+            }
+          />
+        ))}
       </div>
 
       <header className="site-header">
