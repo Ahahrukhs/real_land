@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Primland Explorer Dashboard",
-  description: "A cinematic Next.js resort map dashboard inspired by Blue Ridge mountain estates."
+  title: "Ourika Estates UP Map",
+  description: "A cinematic Uttar Pradesh destination map for Ourika Estates."
 };
 
 export default function RootLayout({

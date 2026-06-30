@@ -2,16 +2,16 @@
 
 import dynamic from "next/dynamic";
 
-const PrimlandExperience = dynamic(() => import("./PrimlandExperience"), {
+const OurikaExperience = dynamic(() => import("./OurikaExperience"), {
   ssr: false,
   loading: () => (
     <main className="loading-screen">
       <div className="loading-mark" />
-      <p>Preparing the mountain map</p>
+      <p>Preparing the UP map</p>
     </main>
   )
 });
 
 export default function ExperienceLoader() {
-  return <PrimlandExperience />;
+  return <OurikaExperience />;
 }
