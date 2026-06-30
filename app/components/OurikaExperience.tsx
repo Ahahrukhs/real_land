@@ -2,7 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
 import L from "leaflet";
 import {
@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
-  CircleMarker,
   MapContainer,
   Marker,
   Polyline,
@@ -146,12 +145,10 @@ function iconFor(zone: Zone) {
     html: `
       <span class="estate-pin estate-pin-${zone.type}" style="--pin-color: ${zone.hue}" role="img" aria-label="${zone.name}">
         <span class="pin-label">${zone.name}</span>
-        <span class="pin-pulse"></span>
-        <span class="pin-core"></span>
       </span>
     `,
-    iconSize: [118, 76],
-    iconAnchor: [59, 72]
+    iconSize: [118, 28],
+    iconAnchor: [59, 14]
   });
 }
 
@@ -221,35 +218,6 @@ function ZoneIcon({ zone }: { zone: Zone }) {
   return <Navigation size={16} />;
 }
 
-function AnimatedTitle() {
-  const lines = ["UTTAR PRADESH", "DESTINATION MAP"];
-  const title = lines.join(" ");
-
-  return (
-    <h1 className="hero-title" aria-label={title}>
-      {lines.map((line, lineIndex) => (
-        <span className="hero-line" key={line}>
-          {line.split("").map((letter, index) => {
-            const letterIndex = lineIndex === 0 ? index : lines[0].length + index;
-
-            return (
-              <motion.span
-                aria-hidden="true"
-                key={`${line}-${letter}-${index}`}
-                initial={{ opacity: 0, y: 18, filter: "blur(12px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ delay: 0.55 + letterIndex * 0.025, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {letter === " " ? "\u00a0" : letter}
-              </motion.span>
-            );
-          })}
-        </span>
-      ))}
-    </h1>
-  );
-}
-
 function BrandMark() {
   return (
     <div className="brand-mark" aria-label="Ourika Estates">
@@ -265,13 +233,6 @@ export default function OurikaExperience() {
   const [engaged, setEngaged] = useState(false);
   const [shouldFocusSelected, setShouldFocusSelected] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 80, damping: 24 });
-  const springY = useSpring(mouseY, { stiffness: 80, damping: 24 });
-  const heroShiftX = useTransform(springX, [0, 1], [-18, 18]);
-  const heroShiftY = useTransform(springY, [0, 1], [-12, 12]);
 
   const filteredZones = useMemo(
     () => (activeType === "all" ? zones : zones.filter((zone) => zone.type === activeType)),
@@ -356,12 +317,6 @@ export default function OurikaExperience() {
     return () => ctx.revert();
   }, []);
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    mouseX.set((event.clientX - rect.left) / rect.width);
-    mouseY.set((event.clientY - rect.top) / rect.height);
-  };
-
   const chooseZone = (zone: Zone) => {
     setSelectedId(zone.id);
     setEntered(true);
@@ -375,7 +330,7 @@ export default function OurikaExperience() {
   };
 
   return (
-    <main className="experience" ref={containerRef} onPointerMove={handlePointerMove}>
+    <main className="experience" ref={containerRef}>
       <MapContainer
         className="estate-map"
         center={center}
@@ -401,20 +356,6 @@ export default function OurikaExperience() {
           pathOptions={{ color: "#f4ead2", weight: 2.5, opacity: entered ? 0.8 : 0.25, dashArray: "12 16" }}
           className="route-glow"
         />
-        {zones.map((zone) => (
-          <CircleMarker
-            key={`${zone.id}-halo`}
-            center={[zone.lat, zone.lng]}
-            radius={zone.id === selected.id ? 28 : 14}
-            pathOptions={{
-              color: zone.hue,
-              fillColor: zone.hue,
-              fillOpacity: zone.id === selected.id ? 0.16 : 0.06,
-              opacity: zone.id === selected.id ? 0.78 : 0.25,
-              weight: 1
-            }}
-          />
-        ))}
         {filteredZones.map((zone) => (
           <Marker
             key={zone.id}
@@ -511,43 +452,16 @@ export default function OurikaExperience() {
         {!entered && (
           <motion.section
             className="hero"
-            style={{ x: heroShiftX, y: heroShiftY }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.96, filter: "blur(12px)" }}
             transition={{ duration: 0.65, ease: "easeOut" }}
           >
             <motion.div
-              className="master-icon"
-              initial={{ opacity: 0, y: -10, rotate: -8 }}
-              animate={{ opacity: 1, y: 0, rotate: 0 }}
-              transition={{ delay: 0.28, duration: 0.7, ease: "easeOut" }}
-            >
-              <MapPin size={18} />
-              <Navigation size={16} />
-            </motion.div>
-            <motion.p
-              className="eyebrow"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45, duration: 0.6 }}
-            >
-              In the heart of
-            </motion.p>
-            <AnimatedTitle />
-            <motion.p
-              className="hero-copy"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.18, duration: 0.72 }}
-            >
-              A cinematic Uttar Pradesh land map highlighting Lucknow, Gaziabad, Kanpur, and Ayodhya.
-            </motion.p>
-            <motion.div
               className="hero-actions"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.36, duration: 0.72 }}
+              transition={{ delay: 0.45, duration: 0.72 }}
             >
               <button className="primary-cta" onClick={enterMap}>
                 Explore the map
